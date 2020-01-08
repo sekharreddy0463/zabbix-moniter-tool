@@ -1,0 +1,126 @@
+
+
+https://www.youtube.com/watch?v=swowr5nq2kI video
+
+https://www.fosslinux.com/7705/how-to-install-and-configure-zabbix-on-centos-7.htm
+
+
+
+
+
+https://technologyrss.com/how-install-zabbix-server-centos-7/
+install zabiiz
+
+
+
+[root@Zabbix-Server ~]# yum -y install httpd
+[root@Zabbix-Server ~]# systemctl start httpd
+[root@Zabbix-Server ~]# systemctl enable httpd
+[root@Zabbix-Server ~]# yum -y install epel-release
+Step #02: Install php using below command
+
+[root@Zabbix-Server ~]# rpm -Uvh https://mirror.webtatic.com/yum/el7/webtatic-release.rpm
+[root@Zabbix-Server ~]# yum -y install mod_php72w php72w-cli php72w-common php72w-devel php72w-pear php72w-gd php72w-mbstring php72w-mysql php72w-xml php72w-bcmath
+Step #03: Increase execution time, upload size and date time zone. Open php.ini file
+
+[root@Zabbix-Server ~]# vi /etc/php.ini
+Insert all below lines into php.ini file
+
+max_execution_time = 600
+max_input_time = 600
+memory_limit = 256M
+post_max_size = 32M
+upload_max_filesize = 16M
+date.timezone = Asia/Dhaka
+Restart web server using below command
+
+[root@Zabbix-Server ~]# systemctl restart httpd
+Step #04: Install Zabbix mysql Database
+
+[root@Zabbix-Server ~]# yum -y install mariadb-server
+[root@Zabbix-Server ~]# systemctl start mariadb
+[root@Zabbix-Server ~]# systemctl enable mariadb
+[root@Zabbix-Server ~]# mysql_secure_installation
+Create Zabbix database for store all data
+
+[root@Zabbix-Server ~]# mysql -u root -p
+Database create command below
+
+create database zabbix; 
+grant all privileges on zabbix.* to zabbix@'localhost' identified by 'passw0rd'; 
+grant all privileges on zabbix.* to zabbix@'%' identified by 'passw0rd'; 
+flush privileges;
+\q
+Step #05: Download rpm package run below command
+
+[root@Zabbix-Server ~]# yum -y install http://repo.zabbix.com/zabbix/3.4/rhel/7/x86_64/zabbix-release-3.4-1.el7.centos.noarch.rpm
+Install Zabbix Mysql using command below
+
+[root@Zabbix-Server ~]# yum -y install zabbix-get zabbix-server-mysql zabbix-web-mysql zabbix-agent
+
+[root@Zabbix-Server ~]# cd /usr/share/doc/zabbix-server-mysql-3.4.6/
+[root@Zabbix-Server ~]# gunzip create.sql.gz
+[root@Zabbix-Server ~]# mysql -u root -p zabbix < create.sql
+Step #06: Check Zabbix Server conf file and make sure insert below line
+
+[root@Zabbix-Server ~]# vi /etc/zabbix/zabbix_server.conf
+Insert below lines
+
+DBHost=localhost
+DBPassword=passw0rd
+DBName=zabbix
+Enable and restart Zabbix Service
+
+[root@Zabbix-Server ~]# systemctl start zabbix-server
+[root@Zabbix-Server ~]# systemctl enable zabbix-server
+Step #07: Configure Zabbix agent conf file. open below file
+
+[root@Zabbix-Server ~]# vi /etc/zabbix/zabbix_agentd.conf
+And ensure that all line are contain conf file
+
+Server=127.0.0.1
+ServerActive=127.0.0.1
+Hostname=Zabbix-Server
+Enable and start Zabbix agent service
+
+systemctl start zabbix-agent
+systemctl enable zabbix-agent
+Step #08: Configure firewall for allow Zabbix port
+
+[root@Zabbix-Server ~]#yum -y install firewalld
+Start and enable firewall service
+
+[root@Zabbix-Server ~]# systemctl start firewalld
+[root@Zabbix-Server ~]# systemctl enable firewalld
+Step #09: Add http and Zabbix port allow
+
+[root@Zabbix-Server ~]# firewall-cmd --add-service={http,https} --permanent
+[root@Zabbix-Server ~]# firewall-cmd --add-port={10051/tcp,10050/tcp} --permanent
+[root@Zabbix-Server ~]# firewall-cmd --reload
+[root@Zabbix-Server ~]# firewall-cmd --list-all
+Finally restart below services
+
+[root@Zabbix-Server ~]# systemctl restart zabbix-server
+[root@Zabbix-Server ~]# systemctl restart zabbix-agent
+[root@Zabbix-Server ~]# systemctl restart httpd
+Very important for disable selinux
+
+[root@Zabbix-Server ~]#  vi /etc/selinux/config
+Change to from enforcing
+
+SELINUX=disabled
+
+Esc :wq Press Enter.
+
+Then reboot your server.
+
+[root@Zabbix-Server ~]# reboot
+
+Goto http://Server_ip/zabbix/
+
+
+After web installation process completed then login using details
+
+User Name : Admin [‘A’ must be capital]
+
+Password : zabbix
